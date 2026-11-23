@@ -1,0 +1,15 @@
+{
+  "name": "Voice Calculator",
+  "short_name": "Calculator",
+  "description": "A simple voice-first calculator with basic and scientific modes.",
+  "lang": "en",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#11151f",
+  "theme_color": "#11151f",
+  "icons": [
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
+}
