@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#11151f">
+<meta name="description" content="A simple voice-first calculator with basic and scientific modes.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Voice Calculator</title>
+<style>
+:root{color-scheme:dark;--bg:#11151f;--surface:#1a2030;--surface2:#222a3d;--line:#30394d;--fg:#f6f7fb;--muted:#a9b3c8;--blue:#4b83ff;--blue2:#8ab0ff;--red:#ff7b83;--green:#73e0c0;--radius:18px}
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);max-width:680px;margin:0 auto}
+button,select,input{font:inherit;color:inherit}button{touch-action:manipulation;cursor:pointer}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--blue2);outline-offset:3px}
+header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);min-height:60px}
+.brand{display:flex;align-items:center;gap:9px;min-width:0;flex:1}.brand img{width:30px;height:30px}.brand h1{font-size:16px;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
+.header-actions{display:flex;align-items:center;gap:8px}.lang-select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:40px}.icon-btn{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center}.icon-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+main{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding:14px 16px 10px;gap:12px}
+.modebar{display:grid;grid-template-columns:1fr 1fr;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:13px;gap:4px}.mode-btn{height:40px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-weight:600}.mode-btn.active{background:var(--surface2);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line)}
+.display{padding:10px 4px 4px;min-height:118px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;text-align:right;overflow:hidden}.eyebrow{align-self:flex-start;color:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase}.expression{width:100%;min-height:32px;margin-top:8px;color:var(--muted);font-size:clamp(18px,5vw,25px);overflow-wrap:anywhere}.result{width:100%;font-size:clamp(42px,12vw,64px);font-weight:650;line-height:1.08;letter-spacing:-.04em;overflow-wrap:anywhere}.result.error{font-size:20px;color:var(--red);letter-spacing:0}
+.transcript{display:none;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);background:var(--surface);border-radius:12px;min-height:46px}.transcript.show{display:flex}.transcript .heard{flex:1;min-width:0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}.transcript .heard strong{color:var(--fg);font-weight:500}.transcript button{border:1px solid var(--line);background:var(--surface2);color:var(--blue2);padding:7px 9px;border-radius:8px;font-size:12px;min-height:36px}.edit-expression{display:none;width:100%;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:14px}.edit-expression.show{display:block}
+.science-tools{display:none;grid-template-columns:repeat(5,1fr);gap:8px}.science-tools.show{display:grid}.key{border:1px solid var(--line);background:var(--surface);border-radius:13px;min-height:48px;font-size:17px;font-weight:550;transition:background .12s ease,border-color .12s ease}.key:active{background:var(--surface2)}.key.fn{color:var(--blue2);font-size:14px}.key.op{color:var(--blue2)}.key.clear{color:var(--red);font-size:14px}.key.equals{background:var(--blue);border-color:var(--blue);color:#07132b;font-size:20px;font-weight:750}.key.zero{grid-column:span 2}
+.angle-row{display:none;align-items:center;justify-content:flex-end;gap:6px;color:var(--muted);font-size:12px}.angle-row.show{display:flex}.angle-btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 11px;font-weight:650;color:var(--muted)}.angle-btn.active{color:var(--fg);border-color:var(--blue)}
+.keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.keypad .key{min-height:clamp(50px,8.5vh,68px);font-size:clamp(19px,5vw,24px)}.keypad .key.clear{font-size:15px}.keypad .key.op{font-size:21px}
+footer{padding:8px 16px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}.mic-wrap{position:relative}.mic-ripple,.mic-ripple2{position:absolute;inset:0;border-radius:16px;border:2px solid var(--blue);opacity:0;pointer-events:none}.mic-wrap.listening .mic-ripple{animation:ripple 1.5s ease-out infinite}.mic-wrap.listening .mic-ripple2{animation:ripple 1.5s ease-out .65s infinite}@keyframes ripple{0%{transform:scale(1);opacity:.65}100%{transform:scale(1.055,1.24);opacity:0}}
+.mic-btn{position:relative;z-index:1;width:100%;min-height:66px;border-radius:16px;border:1px solid var(--blue);background:var(--blue);color:#07132b;display:flex;align-items:center;justify-content:center;gap:11px;font-weight:750;font-size:17px}.mic-btn svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.mic-wrap.listening .mic-btn{background:#315fc2;color:#fff;box-shadow:0 0 24px #4b83ff66}.mic-hint{text-align:center;color:var(--muted);font-size:11px;margin:7px 0 0}.status{min-height:21px;text-align:center;padding:5px 12px 0;color:var(--muted);font-size:12px}.privacy{padding:6px 16px 0;color:#7f8aa2;text-align:center;font-size:10px}
+.overlay{position:fixed;inset:0;background:#0009;display:none;align-items:flex-end;justify-content:center;z-index:5}.overlay.open{display:flex}.sheet{width:min(100%,680px);max-height:75vh;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;padding:16px;display:flex;flex-direction:column;gap:10px}.sheet-head{display:flex;justify-content:space-between;align-items:center}.sheet h2{font-size:16px;margin:0}.history-list{overflow:auto;display:flex;flex-direction:column;gap:6px}.history-item{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid var(--line);padding:10px 2px}.history-item button{border:0;background:transparent;text-align:right}.history-expr{color:var(--muted);font-size:13px}.history-result{font-size:17px;font-weight:650}.plain-btn{background:transparent;border:1px solid var(--line);border-radius:10px;min-height:40px;padding:0 12px;color:var(--muted)}.empty-history{color:var(--muted);text-align:center;padding:22px 8px}
+@media (min-height:780px){main{gap:15px;padding-top:18px}.display{min-height:146px}.keypad{gap:10px}.science-tools{gap:10px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><img src="icon.svg" alt=""><h1 id="appTitle">Voice Calculator</h1></div>
+  <div class="header-actions">
+    <select id="language" class="lang-select" aria-label="Language">
+      <option value="en-US">EN</option><option value="bn-BD">বাংলা</option><option value="zh-CN">简体</option><option value="ko-KR">한국어</option>
+    </select>
+    <button id="historyOpen" class="icon-btn" type="button" aria-label="History" title="History">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>
+    </button>
+  </div>
+</header>
+<main>
+  <div class="modebar" role="tablist" aria-label="Calculator mode">
+    <button id="basicMode" class="mode-btn active" type="button" role="tab" aria-selected="true">Basic</button>
+    <button id="scientificMode" class="mode-btn" type="button" role="tab" aria-selected="false">Scientific</button>
+  </div>
+  <div class="display" aria-live="polite">
+    <div class="eyebrow" id="calcLabel">Your calculation</div>
+    <div id="expression" class="expression">0</div>
+    <div id="result" class="result">0</div>
+  </div>
+  <div id="transcript" class="transcript">
+    <div class="heard"><strong id="heardLabel">I heard:</strong> <span id="heardText"></span></div>
+    <button id="editHeard" type="button">Edit</button>
+    <button id="confirmHeard" type="button">Calculate</button>
+    <button id="cancelHeard" type="button">Cancel</button>
+    <input id="editExpression" class="edit-expression" type="text" autocomplete="off" aria-label="Edit expression">
+  </div>
+  <div id="angleRow" class="angle-row"><span id="angleLabel">Angle</span><button id="degBtn" class="angle-btn active" type="button">DEG</button><button id="radBtn" class="angle-btn" type="button">RAD</button></div>
+  <div id="scienceTools" class="science-tools" aria-label="Scientific functions">
+    <button class="key fn" data-key="sin" type="button">sin</button><button class="key fn" data-key="cos" type="button">cos</button><button class="key fn" data-key="tan" type="button">tan</button><button class="key fn" data-key="log" type="button">log</button><button class="key fn" data-key="ln" type="button">ln</button>
+    <button class="key fn" data-key="sqrt" type="button">√</button><button class="key fn" data-key="^2" type="button">x²</button><button class="key fn" data-key="^" type="button">xʸ</button><button class="key fn" data-key="π" type="button">π</button><button class="key fn" data-action="paren" type="button">( )</button>
+  </div>
+  <div id="keypad" class="keypad">
+    <button class="key clear" data-action="clear" type="button">AC</button><button class="key" data-action="sign" type="button">±</button><button class="key" data-key="%" type="button">%</button><button class="key op" data-key="/" type="button">÷</button>
+    <button class="key" data-key="7" type="button">7</button><button class="key" data-key="8" type="button">8</button><button class="key" data-key="9" type="button">9</button><button class="key op" data-key="*" type="button">×</button>
+    <button class="key" data-key="4" type="button">4</button><button class="key" data-key="5" type="button">5</button><button class="key" data-key="6" type="button">6</button><button class="key op" data-key="-" type="button">−</button>
+    <button class="key" data-key="1" type="button">1</button><button class="key" data-key="2" type="button">2</button><button class="key" data-key="3" type="button">3</button><button class="key op" data-key="+" type="button">+</button>
+    <button class="key zero" data-key="0" type="button">0</button><button class="key" data-key="." type="button">.</button><button class="key equals" data-action="equals" type="button">=</button>
+  </div>
+</main>
+<footer>
+  <div id="micWrap" class="mic-wrap">
+    <span class="mic-ripple"></span><span class="mic-ripple2"></span>
+    <button id="micButton" class="mic-btn" type="button" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg>
+      <span id="micText">Tap to speak</span>
+    </button>
+  </div>
+  <p id="micHint" class="mic-hint">Say a calculation or command</p>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <div id="privacy" class="privacy">Voice recognition may use your phone's speech service. Calculations stay on this device.</div>
+</footer>
+<div id="historyOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+  <section class="sheet"><div class="sheet-head"><h2 id="historyTitle">History</h2><button id="historyClose" class="plain-btn" type="button">Close</button></div><div id="historyList" class="history-list"></div><button id="clearHistory" class="plain-btn" type="button">Clear history</button></section>
+</div>
+<script>
+(function(){
+  "use strict";
+  const STR={
+    "en-US":{title:"Voice Calculator",basic:"Basic",scientific:"Scientific",calc:"Your calculation",tap:"Tap to speak",listening:"Listening…",hint:"Say a calculation or command",heard:"I heard:",edit:"Edit",calculate:"Calculate",cancel:"Cancel",editPlaceholder:"Edit expression",angle:"Angle",deg:"DEG",rad:"RAD",history:"History",close:"Close",clearHistory:"Clear history",emptyHistory:"No calculations yet.",privacy:"Voice recognition may use your phone's speech service. Calculations stay on this device.",ready:"Ready",unsupported:"Voice input is not available in this browser. Try Android Chrome or use the keypad.",denied:"Microphone access was blocked. Allow it in your browser settings, or use the keypad.",noSpeech:"I didn't hear that. Tap and try again.",network:"Voice recognition needs an internet connection on this device.",unclear:"I couldn't turn that into a clear calculation. Edit the expression or use the keypad.",error:"I couldn't calculate that. Check the expression.",division:"Cannot divide by zero.",copy:"Copy result",copied:"Copied",editPrompt:"Edit the expression, then calculate.",voiceLang:"Language"},
+    "bn-BD":{title:"ভয়েস ক্যালকুলেটর",basic:"সাধারণ",scientific:"বৈজ্ঞানিক",calc:"আপনার হিসাব",tap:"কথা বলতে চাপুন",listening:"শুনছি…",hint:"হিসাব বা নির্দেশ বলুন",heard:"যা শুনেছি:",edit:"সম্পাদনা",calculate:"হিসাব করুন",cancel:"বাতিল",editPlaceholder:"হিসাবটি ঠিক করুন",angle:"কোণ",deg:"ডিগ্রি",rad:"রেডিয়ান",history:"ইতিহাস",close:"বন্ধ",clearHistory:"ইতিহাস মুছুন",emptyHistory:"এখনও কোনো হিসাব নেই।",privacy:"ভয়েস চিনতে ফোনের স্পিচ সেবা লাগতে পারে। হিসাব এই ফোনেই হয়।",ready:"প্রস্তুত",unsupported:"এই ব্রাউজারে ভয়েস ইনপুট নেই। Android Chrome চেষ্টা করুন বা বোতাম ব্যবহার করুন।",denied:"মাইক্রোফোনের অনুমতি বন্ধ। ব্রাউজার সেটিংসে অনুমতি দিন, অথবা বোতাম ব্যবহার করুন।",noSpeech:"শুনতে পাইনি। আবার চাপ দিয়ে বলুন।",network:"এই ফোনে ভয়েস চিনতে ইন্টারনেট লাগতে পারে।",unclear:"পরিষ্কার হিসাব বুঝতে পারিনি। লেখাটি ঠিক করুন বা বোতাম ব্যবহার করুন।",error:"হিসাব করতে পারিনি। লেখাটি দেখে নিন।",division:"শূন্য দিয়ে ভাগ করা যায় না।",copy:"ফল কপি",copied:"কপি হয়েছে",editPrompt:"হিসাবটি ঠিক করে তারপর হিসাব করুন।",voiceLang:"ভাষা"},
+    "zh-CN":{title:"语音计算器",basic:"标准",scientific:"科学",calc:"当前计算",tap:"点击说话",listening:"正在聆听…",hint:"说出算式或指令",heard:"识别内容：",edit:"编辑",calculate:"计算",cancel:"取消",editPlaceholder:"编辑算式",angle:"角度",deg:"度",rad:"弧度",history:"历史记录",close:"关闭",clearHistory:"清除记录",emptyHistory:"暂无计算记录。",privacy:"语音识别可能使用手机的语音服务。计算在此设备上完成。",ready:"就绪",unsupported:"此浏览器不支持语音输入。请尝试 Android Chrome 或使用按键。",denied:"麦克风权限被阻止。请在浏览器设置中允许，或使用按键。",noSpeech:"没有听清，请再试一次。",network:"此设备上的语音识别可能需要网络连接。",unclear:"无法识别为清晰算式。请编辑表达式或使用按键。",error:"无法计算，请检查表达式。",division:"不能除以零。",copy:"复制结果",copied:"已复制",editPrompt:"编辑表达式后再计算。",voiceLang:"语言"},
+    "ko-KR":{title:"음성 계산기",basic:"기본",scientific:"공학용",calc:"계산식",tap:"눌러서 말하기",listening:"듣는 중…",hint:"수식이나 명령을 말하세요",heard:"인식한 내용:",edit:"수정",calculate:"계산",cancel:"취소",editPlaceholder:"수식 수정",angle:"각도",deg:"도",rad:"라디안",history:"기록",close:"닫기",clearHistory:"기록 지우기",emptyHistory:"아직 계산 기록이 없습니다.",privacy:"음성 인식은 휴대전화 음성 서비스를 사용할 수 있습니다. 계산은 이 기기에서 처리됩니다.",ready:"준비됨",unsupported:"이 브라우저에서는 음성 입력을 사용할 수 없습니다. Android Chrome을 시도하거나 키패드를 사용하세요.",denied:"마이크 권한이 차단되었습니다. 브라우저 설정에서 허용하거나 키패드를 사용하세요.",noSpeech:"잘 듣지 못했습니다. 다시 시도하세요.",network:"이 기기에서 음성 인식에는 인터넷이 필요할 수 있습니다.",unclear:"명확한 수식으로 변환하지 못했습니다. 식을 수정하거나 키패드를 사용하세요.",error:"계산할 수 없습니다. 식을 확인하세요.",division:"0으로 나눌 수 없습니다.",copy:"결과 복사",copied:"복사됨",editPrompt:"수식을 수정한 다음 계산하세요.",voiceLang:"언어"}
+  };
+  const LANGS=Object.keys(STR);
+  const $=id=>document.getElementById(id);
+  const langEl=$("language"),exprEl=$("expression"),resultEl=$("result"),statusEl=$("status"),micWrap=$("micWrap"),micButton=$("micButton"),micText=$("micText"),transcriptBox=$("transcript"),heardText=$("heardText"),historyOverlay=$("historyOverlay"),historyList=$("historyList");
+  let locale=localStorage.getItem("vc-locale")||detectLocale();
+  let expression=""; let lastValue=0; let justEvaluated=false; let angle="deg"; let recognition=null; let listening=false; let pendingTranscript=""; let history=readHistory();
+  langEl.value=locale;
+  function detectLocale(){const raw=(navigator.language||"en-US").toLowerCase();if(raw.startsWith("bn"))return"bn-BD";if(raw.startsWith("zh"))return"zh-CN";if(raw.startsWith("ko"))return"ko-KR";return"en-US"}
+  function t(key){return (STR[locale]||STR["en-US"])[key]||STR["en-US"][key]||key}
+  function setStatus(s){statusEl.textContent=s}
+  function updateStrings(){document.documentElement.lang=locale;$("appTitle").textContent=t("title");$("basicMode").textContent=t("basic");$("scientificMode").textContent=t("scientific");$("calcLabel").textContent=t("calc");$("micText").textContent=listening?t("listening"):t("tap");$("micHint").textContent=t("hint");$("heardLabel").textContent=t("heard");$("editHeard").textContent=t("edit");$("confirmHeard").textContent=t("calculate");$("cancelHeard").textContent=t("cancel");$("editExpression").setAttribute("aria-label",t("editPlaceholder"));$("angleLabel").textContent=t("angle");$("degBtn").textContent=t("deg");$("radBtn").textContent=t("rad");$("historyTitle").textContent=t("history");$("historyOpen").title=t("history");$("historyOpen").setAttribute("aria-label",t("history"));$("historyClose").textContent=t("close");$("clearHistory").textContent=t("clearHistory");$("privacy").textContent=t("privacy");renderHistory()}
+  langEl.addEventListener("change",()=>{locale=langEl.value;localStorage.setItem("vc-locale",locale);updateStrings();setStatus(t("ready"))});
+  function readHistory(){try{return JSON.parse(localStorage.getItem("vc-history")||"[]").slice(0,30)}catch(e){return[]}}
+  function writeHistory(){try{localStorage.setItem("vc-history",JSON.stringify(history.slice(0,30)))}catch(e){}}
+  function displayExpr(s){return (s||"0").replaceAll("*","×").replaceAll("/","÷").replaceAll("-","−").replaceAll("sqrt","√").replaceAll("pi","π")}
+  function formatNumber(x){if(!Number.isFinite(x))return"—";if(Math.abs(x)<1e-12&&x!==0)x=0;return new Intl.NumberFormat(locale,{maximumSignificantDigits:12,useGrouping:true}).format(x)}
+  function render(){exprEl.textContent=displayExpr(expression);resultEl.classList.remove("error");if(!expression){resultEl.textContent="0";return}try{const v=calculate(expression);lastValue=v;resultEl.textContent=formatNumber(v)}catch(e){resultEl.textContent=""}}
+  function addToExpr(v){if(justEvaluated){if(/[+\-*/^%]/.test(v))expression=String(lastValue);else expression=""}justEvaluated=false;expression+=v;render()}
+  function clearAll(){expression="";justEvaluated=false;transcriptBox.classList.remove("show");render();setStatus(t("ready"))}
+  function deleteOne(){expression=expression.slice(0,-1);justEvaluated=false;render()}
+  function toggleSign(){if(justEvaluated){expression=String(-lastValue);justEvaluated=false;render();return}if(!expression){expression="-";render();return}const m=expression.match(/(\d*\.?\d+)(?!.*\d)/);if(!m){expression="-"+expression;render();return}const at=m.index;const before=expression.slice(0,at),num=m[0];expression=before.endsWith("-")?before.slice(0,-1)+num:before+"(-"+num+")"+expression.slice(at+num.length);render()}
+  function addHistory(exp,val){history.unshift({exp:exp,val:val,at:Date.now()});history=history.slice(0,30);writeHistory();renderHistory()}
+  function calculateAndShow(){if(!expression)return;try{const original=expression;const v=calculate(expression);lastValue=v;resultEl.classList.remove("error");resultEl.textContent=formatNumber(v);justEvaluated=true;addHistory(original,formatNumber(v));speak(formatNumber(v));transcriptBox.classList.remove("show");setStatus(t("ready"))}catch(e){resultEl.textContent=e.message||t("error");resultEl.classList.add("error");setStatus(t("error"))}}
+  $("keypad").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.action==="clear")clearAll();else if(b.dataset.action==="equals")calculateAndShow();else if(b.dataset.action==="sign")toggleSign();else if(b.dataset.action==="paren"){const o=(expression.match(/\(/g)||[]).length,c=(expression.match(/\)/g)||[]).length;addToExpr(o>c?")":"(")}else if(b.dataset.key)addToExpr(b.dataset.key)});
+  $("scienceTools").addEventListener("click",e=>{const b=e.target.closest("button");if(b&&b.dataset.key)addToExpr(b.dataset.key)});
+  $("basicMode").addEventListener("click",()=>setMode(false));$("scientificMode").addEventListener("click",()=>setMode(true));
+  function setMode(s){$("basicMode").classList.toggle("active",!s);$("scientificMode").classList.toggle("active",s);$("basicMode").setAttribute("aria-selected",String(!s));$("scientificMode").setAttribute("aria-selected",String(s));$("scienceTools").classList.toggle("show",s);$("angleRow").classList.toggle("show",s)}
+  $("degBtn").addEventListener("click",()=>setAngle("deg"));$("radBtn").addEventListener("click",()=>setAngle("rad"));function setAngle(v){angle=v;$("degBtn").classList.toggle("active",v==="deg");$("radBtn").classList.toggle("active",v==="rad");render()}
+
+  function calculate(src){const tokens=tokenize(src);let p=0;function peek(){return tokens[p]}function take(){return tokens[p++]}
+    function expression(){let v=term();while(peek()==="+"||peek()==="-"){const op=take(),r=term();v=op==="+"?v+r:v-r}return v}
+    function term(){let v=power();while(peek()==="*"||peek()==="/"){const op=take(),r=power();if(op==="/"&&r===0)throw new Error(t("division"));v=op==="*"?v*r:v/r}return v}
+    function power(){let v=unary();if(peek()==="^"){take();v=Math.pow(v,power())}return v}
+    function unary(){if(peek()==="+"){take();return unary()}if(peek()==="-"){take();return-unary()}return postfix()}
+    function postfix(){let v=primary();while(peek()==="%"||peek()==="!"){const op=take();if(op==="%")v/=100;else{if(v<0||v>170||Math.floor(v)!==v)throw new Error(t("error"));let z=1;for(let i=2;i<=v;i++)z*=i;v=z}}return v}
+    function primary(){const tk=take();if(tk===undefined)throw new Error(t("error"));if(tk==="("){const v=expression();if(take()!==")")throw new Error(t("error"));return v}if(tk==="pi")return Math.PI;if(tk==="e")return Math.E;if(/^(sin|cos|tan|log|ln|sqrt)$/.test(tk)){let arg;if(peek()==="("){take();arg=expression();if(take()!==")")throw new Error(t("error"))}else arg=unary();if(tk==="sqrt")return Math.sqrt(arg);if(tk==="log")return Math.log10(arg);if(tk==="ln")return Math.log(arg);const a=angle==="deg"?arg*Math.PI/180:arg;return tk==="sin"?Math.sin(a):tk==="cos"?Math.cos(a):Math.tan(a)}if(/^(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(tk))return Number(tk);throw new Error(t("error"))}
+    const result=expression();if(p!==tokens.length||!Number.isFinite(result))throw new Error(t("error"));return result}
+  function tokenize(s){s=s.replaceAll("×","*").replaceAll("÷","/").replaceAll("−","-").replaceAll("π","pi").replaceAll("√(","sqrt").replace(/\s+/g,"");const re=/\d*\.?\d+(?:e[+-]?\d+)?|sin|cos|tan|log|ln|sqrt|pi|e|[()+\-*/%^!]/igy;let out=[],i=0;while(i<s.length){re.lastIndex=i;const m=re.exec(s);if(!m)throw new Error(t("error"));out.push(m[0].toLowerCase());i=re.lastIndex}return out}
+  function normalizeDigits(s){const d="০১২৩৪৫৬৭৮৯";return s.replace(/[০-৯]/g,c=>String(d.indexOf(c))).replace(/[０-９]/g,c=>String(c.charCodeAt(0)-0xff10))}
+  function spokenToExpression(text){let s=normalizeDigits(text.toLowerCase().trim());const sets={
+    "en-US":[[/square root of|square root|root of/g,"sqrt"],[/sine of|sine/g,"sin"],[/cosine of|cosine/g,"cos"],[/tangent of|tangent/g,"tan"],[/logarithm of|log of/g,"log"],[/natural log of|natural logarithm of/g,"ln"],[/multiplied by|times|multiply by/g,"*"],[/divided by|divide by|over/g,"/"],[/plus|add/g,"+"],[/minus|subtract/g,"-"],[/to the power of|power of/g,"^"],[/percent|per cent/g,"%"],[/open parenthesis/g,"("],[/close parenthesis/g,")"],[/pi/g,"pi"]],
+    "bn-BD":[[/বর্গমূল(?: of)?/g,"sqrt"],[/বর্গমূল/g,"sqrt"],[/সাইন|সিন/g,"sin"],[/কোসাইন|কস/g,"cos"],[/ট্যানজেন্ট|ট্যান/g,"tan"],[/লগারিদম|লগ/g,"log"],[/স্বাভাবিক লগ|এল এন/g,"ln"],[/গুণিতক|গুণ|ইনটু|গুন/g,"*"],[/ভাগ/g,"/"],[/যোগ|প্লাস/g,"+"],[/বিয়োগ|বিয়োগ|মাইনাস/g,"-"],[/ঘাত/g,"^"],[/শতাংশ|পার্সেন্ট/g,"%"],[/পাই/g,"pi"]],
+    "zh-CN":[[/平方根/g,"sqrt"],[/自然对数/g,"ln"],[/正弦/g,"sin"],[/余弦/g,"cos"],[/正切/g,"tan"],[/对数/g,"log"],[/乘以|乘/g,"*"],[/除以|除/g,"/"],[/加上|加/g,"+"],[/减去|减/g,"-"],[/的平方/g,"^2"],[/次方/g,"^"],[/圆周率|派/g,"pi"]],
+    "ko-KR":[[/제곱근/g,"sqrt"],[/자연로그/g,"ln"],[/사인/g,"sin"],[/코사인/g,"cos"],[/탄젠트/g,"tan"],[/로그/g,"log"],[/곱하기/g,"*"],[/나누기/g,"/"],[/더하기|플러스/g,"+"],[/빼기|마이너스/g,"-"],[/의 제곱/g,"^2"],[/제곱/g,"^"],[/파이/g,"pi"]]};
+    let rules=sets[locale]||sets["en-US"];for(const [re,val] of rules)s=s.replace(re,val);s=s.replace(/[，,]/g," ").replace(/=/g,"");s=s.replace(/\b(what is|calculate|equals|equal to|the answer is|please|compute)\b/g,"");s=s.replace(/\b(얼마|계산해|계산|은|는|값은)\b/g,"");s=s.replace(/(是多少|等于|计算|请)/g,"");s=s.replace(/(계산해 주세요|계산해|얼마인가요)/g,"");s=s.replace(/\bdegrees?\b/g,"").replace(/ডিগ্রি/g,"").replace(/度/g,"").replace(/도/g,"");s=s.replace(/\s+/g,"");return s}
+  function processVoice(text){pendingTranscript=text;const normalized=spokenToExpression(text);try{calculate(normalized);expression=normalized;render();justEvaluated=false;calculateAndShow();}catch(e){$("heardText").textContent=text;$("editExpression").value=text;$("editExpression").classList.remove("show");transcriptBox.classList.add("show");setStatus(t("unclear"))}}
+  $("editHeard").addEventListener("click",()=>{$("editExpression").classList.add("show");$("editExpression").focus();setStatus(t("editPrompt"))});
+  $("confirmHeard").addEventListener("click",()=>{const raw=$("editExpression").classList.contains("show")?$("editExpression").value:pendingTranscript;const normalized=spokenToExpression(raw);try{calculate(normalized);expression=normalized;render();transcriptBox.classList.remove("show");calculateAndShow()}catch(e){setStatus(t("unclear"));$("editExpression").classList.add("show");$("editExpression").focus()}});
+  $("cancelHeard").addEventListener("click",()=>{transcriptBox.classList.remove("show");setStatus(t("ready"))});
+  function startVoice(){const C=window.SpeechRecognition||window.webkitSpeechRecognition;if(!C){setStatus(t("unsupported"));return}try{window.speechSynthesis?.cancel();recognition=new C();recognition.lang=locale;recognition.interimResults=false;recognition.continuous=false;recognition.maxAlternatives=1;recognition.onstart=()=>{listening=true;micWrap.classList.add("listening");micButton.setAttribute("aria-pressed","true");micText.textContent=t("listening");setStatus(t("listening"))};recognition.onresult=e=>{const alt=e.results?.[0]?.[0];const text=alt?.transcript||"";if(text){if(typeof alt.confidence==="number"&&alt.confidence>0&&alt.confidence<0.55){pendingTranscript=text;$("heardText").textContent=text;$("editExpression").value=text;$("editExpression").classList.remove("show");transcriptBox.classList.add("show");setStatus(t("unclear"))}else processVoice(text)}else setStatus(t("noSpeech"))};recognition.onerror=e=>{listening=false;micWrap.classList.remove("listening");micButton.setAttribute("aria-pressed","false");micText.textContent=t("tap");if(e.error==="not-allowed"||e.error==="service-not-allowed")setStatus(t("denied"));else if(e.error==="network")setStatus(t("network"));else if(e.error==="no-speech")setStatus(t("noSpeech"));else if(e.error!=="aborted")setStatus(t("unsupported"))};recognition.onend=()=>{listening=false;micWrap.classList.remove("listening");micButton.setAttribute("aria-pressed","false");micText.textContent=t("tap");if(statusEl.textContent===t("listening"))setStatus(t("ready"))};recognition.start()}catch(e){setStatus(t("unsupported"))}}
+  micButton.addEventListener("click",()=>{if(listening){try{recognition?.stop()}catch(e){}return}startVoice()});
+  function speak(text){if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(String(text));u.lang=locale;window.speechSynthesis.cancel();window.speechSynthesis.speak(u)}
+  function renderHistory(){historyList.innerHTML="";if(!history.length){const p=document.createElement("p");p.className="empty-history";p.textContent=t("emptyHistory");historyList.appendChild(p);return}for(const h of history){const row=document.createElement("div");row.className="history-item";const left=document.createElement("span");left.className="history-expr";left.textContent=displayExpr(h.exp);const btn=document.createElement("button");btn.type="button";btn.className="history-result";btn.textContent=h.val;btn.addEventListener("click",()=>{expression=h.exp;render();closeHistory()});row.append(left,btn);historyList.appendChild(row)}}
+  function closeHistory(){historyOverlay.classList.remove("open")}$("historyOpen").addEventListener("click",()=>{renderHistory();historyOverlay.classList.add("open")});$("historyClose").addEventListener("click",closeHistory);historyOverlay.addEventListener("click",e=>{if(e.target===historyOverlay)closeHistory()});$("clearHistory").addEventListener("click",()=>{history=[];writeHistory();renderHistory()});document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHistory();if(e.key==="Backspace"){e.preventDefault();deleteOne()}else if(e.key==="Enter"){e.preventDefault();calculateAndShow()}else if("0123456789.+-*/()%".includes(e.key)&&e.key.length===1){addToExpr(e.key)}});
+  updateStrings();render();if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+})();
+</script>
+</body>
+</html>
